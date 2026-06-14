@@ -1,15 +1,15 @@
-import { useRef, useState, type FormEvent } from 'react'
+import { useRef, useState } from 'react'
 import { streamChatMessage } from '../api/chat'
 import PatchReview from '../components/PatchReview'
 import ProjectSelector from '../components/ProjectSelector'
 import SourceCitationList from '../components/SourceCitationList'
+import { AI_Prompt } from '@/components/ui/animated-ai-input'
 import { useProject } from '../context/ProjectContext'
 import type { ChatMessage, PatchProposal } from '../types'
 
 export default function ChatPage() {
   const { selectedProject, explainMode } = useProject()
   const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [conversationId, setConversationId] = useState<string | undefined>()
@@ -21,9 +21,7 @@ export default function ChatPage() {
     )
   }
 
-  async function handleSend(event: FormEvent) {
-    event.preventDefault()
-    const trimmed = input.trim()
+  async function sendMessage(trimmed: string) {
     if (!trimmed || isLoading || !selectedProject) return
 
     const userMessage: ChatMessage = {
@@ -38,7 +36,6 @@ export default function ChatPage() {
       userMessage,
       { id: assistantId, role: 'assistant', text: '', streaming: true },
     ])
-    setInput('')
     setError(null)
     setIsLoading(true)
 
@@ -138,26 +135,13 @@ export default function ChatPage() {
         <div ref={bottomRef} />
       </div>
 
-      <form
-        onSubmit={handleSend}
-        className="flex gap-3 border-t border-slate-800 px-6 py-4"
-      >
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
+      <div className="border-t border-slate-800 px-6 py-3">
+        <AI_Prompt
+          onSend={sendMessage}
+          disabled={isLoading || !selectedProject}
           placeholder="Ask about your repo, a file, or a bug…"
-          disabled={isLoading}
-          className="flex-1 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm outline-none focus:border-violet-500 disabled:opacity-50"
         />
-        <button
-          type="submit"
-          disabled={isLoading || !input.trim()}
-          className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-medium text-white hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          Send
-        </button>
-      </form>
+      </div>
     </div>
   )
 }
