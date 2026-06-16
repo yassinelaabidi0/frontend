@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { motion, AnimatePresence } from 'framer-motion'
+import FileContextBar from '@/components/chat/FileContextBar'
 
 type UseAutoResizeTextareaProps = {
   minHeight: number
@@ -94,6 +95,9 @@ export type AI_PromptProps = {
   disabled?: boolean
   placeholder?: string
   className?: string
+  attachedFiles?: string[]
+  onAttachFiles?: (files: string[]) => void
+  onRemoveFile?: (file: string) => void
 }
 
 export function AI_Prompt({
@@ -101,6 +105,9 @@ export function AI_Prompt({
   disabled = false,
   placeholder = 'What can I do for you?',
   className,
+  attachedFiles = [],
+  onAttachFiles,
+  onRemoveFile,
 }: AI_PromptProps) {
   const [value, setValue] = useState('')
   const { textareaRef, adjustHeight } = useAutoResizeTextarea({
@@ -197,6 +204,10 @@ export function AI_Prompt({
       <div className="rounded-2xl bg-black/5 p-1.5 dark:bg-white/5">
         <div className="relative">
           <div className="relative flex flex-col">
+            <FileContextBar
+              files={attachedFiles}
+              onRemove={(file) => onRemoveFile?.(file)}
+            />
             <div className="overflow-y-auto" style={{ maxHeight: '400px' }}>
               <Textarea
                 id="ai-input-15"
@@ -270,7 +281,18 @@ export function AI_Prompt({
                     )}
                     aria-label="Attach file"
                   >
-                    <input type="file" className="hidden" />
+                    <input
+                      type="file"
+                      className="hidden"
+                      multiple
+                      onChange={(e) => {
+                        const names = Array.from(e.target.files ?? []).map(
+                          (f) => f.name,
+                        )
+                        if (names.length > 0) onAttachFiles?.(names)
+                        e.target.value = ''
+                      }}
+                    />
                     <Paperclip className="h-4 w-4 transition-colors" />
                   </label>
                 </div>

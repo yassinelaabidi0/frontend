@@ -13,11 +13,12 @@ export async function* streamChatMessage(
   request: ChatRequest,
 ): AsyncGenerator<string, ChatResponse, undefined> {
   const full = await sendChatMessage(request)
-  const words = full.response.split(/(\s+)/)
+  const text = full.response
 
-  for (const word of words) {
-    yield word
-    await new Promise((r) => setTimeout(r, 25))
+  // Character-level chunks for smooth token-by-token streaming UI
+  for (const char of text) {
+    yield char
+    await new Promise((r) => setTimeout(r, 8))
   }
 
   return full

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { applyPatch, rejectPatch } from '../api/patches'
+import GitDiffViewer from './diff/GitDiffViewer'
 import type { PatchProposal } from '../types'
-import DiffViewer from './DiffViewer'
 
 type PatchReviewProps = {
   patch: PatchProposal
@@ -16,8 +16,7 @@ export default function PatchReview({ patch, onUpdate }: PatchReviewProps) {
     setBusy(true)
     setError(null)
     try {
-      const updated = await applyPatch(patch.id)
-      onUpdate(updated)
+      onUpdate(await applyPatch(patch.id))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to apply patch')
     } finally {
@@ -29,8 +28,7 @@ export default function PatchReview({ patch, onUpdate }: PatchReviewProps) {
     setBusy(true)
     setError(null)
     try {
-      const updated = await rejectPatch(patch.id)
-      onUpdate(updated)
+      onUpdate(await rejectPatch(patch.id))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to reject patch')
     } finally {
@@ -38,26 +36,21 @@ export default function PatchReview({ patch, onUpdate }: PatchReviewProps) {
     }
   }
 
-  const statusColor =
-    patch.status === 'applied'
-      ? 'text-emerald-400'
-      : patch.status === 'rejected'
-        ? 'text-red-400'
-        : 'text-amber-400'
-
   return (
-    <div className="mt-4 space-y-4 rounded-xl border border-slate-700 bg-slate-900/50 p-4">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <h3 className="font-semibold text-slate-100">{patch.title}</h3>
-          <p className="mt-1 text-sm text-slate-400">{patch.explanation}</p>
-        </div>
-        <span className={`text-xs font-medium uppercase ${statusColor}`}>
-          {patch.status}
-        </span>
+    <div className="mt-4 space-y-3">
+      <div>
+        <h3 className="font-semibold text-slate-100">{patch.title}</h3>
+        <p className="mt-1 text-sm text-slate-400">{patch.explanation}</p>
       </div>
 
-      <DiffViewer file={patch.file} lines={patch.diff} />
+      <GitDiffViewer
+        file={patch.file}
+        lines={patch.diff}
+        status={patch.status}
+        onAccept={handleApply}
+        onReject={handleReject}
+        busy={busy}
+      />
 
       <div className="grid gap-3 text-sm sm:grid-cols-2">
         <div>
@@ -84,30 +77,7 @@ export default function PatchReview({ patch, onUpdate }: PatchReviewProps) {
         Confidence: {(patch.confidence * 100).toFixed(0)}%
       </p>
 
-      {patch.status === 'pending' && (
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={handleApply}
-            disabled={busy}
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
-          >
-            Apply patch
-          </button>
-          <button
-            type="button"
-            onClick={handleReject}
-            disabled={busy}
-            className="rounded-lg border border-slate-600 px-4 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800 disabled:opacity-50"
-          >
-            Reject
-          </button>
-        </div>
-      )}
-
-      {error && (
-        <p className="text-sm text-red-300">{error}</p>
-      )}
+      {error && <p className="text-sm text-red-300">{error}</p>}
     </div>
   )
 }

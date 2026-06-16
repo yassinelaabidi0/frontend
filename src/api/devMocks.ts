@@ -203,7 +203,7 @@ export function mockChat(request: ChatRequest): ChatResponse {
   return {
     response:
       base +
-      ' Based on the indexed codebase, the relevant files are cited below.',
+      ' Based on the indexed codebase, the relevant handler looks like this:\n\n```typescript\nconst res = await fetch("/chat", {\n  method: "POST",\n  headers: { "Content-Type": "application/json" },\n  body: JSON.stringify({ message, project }),\n})\n```\n\nSee cited sources below for file locations.',
     conversationId: request.conversationId ?? `conv-${Date.now()}`,
     sources: MOCK_SOURCES,
   }
